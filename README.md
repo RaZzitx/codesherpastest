@@ -1,0 +1,3 @@
+- Fill the config.json with the host, port and IBAN parameters
+- Install requirements.txt to be able to run the app
+- Run menu.py to run the app
