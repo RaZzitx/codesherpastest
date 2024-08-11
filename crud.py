@@ -20,11 +20,15 @@ def create_account(db: Session, account: schemas.AccountCreate):
 
 def get_account_byID(db: Session, account_id: id):
     return db.query(models.Account).filter(models.Account.id == account_id).first()
+
+# GET ACCOUNT BY IBAN
 def get_account(db: Session, iban: str):
     account = db.query(models.Account).filter(models.Account.iban == iban).first()
     if not account:
         return None
     return account
+
+# GET ALL THE ACCOUNTS
 def get_accounts(db: Session, skip: int = 0):
     return db.query(models.Account).offset(skip).all()
 

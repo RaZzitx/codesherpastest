@@ -239,7 +239,7 @@ def show_menu(host, port, iban):
                 print("Invalid IBAN try again")
 
     except KeyboardInterrupt:
-        print("\nInterrupción del teclado detectada. Saliendo...")
+        print("\nKeyboard interrupt detected. Exiting...")
 
 if __name__ == "__main__":
     host, port, iban = readConfig()
@@ -254,7 +254,7 @@ if __name__ == "__main__":
     # Show the menu
     show_menu(host, port, iban)
 
-    # Para detener el servidor
+    # Stop the server
     stop_server()
 
     # Wait for the server thread to finish
