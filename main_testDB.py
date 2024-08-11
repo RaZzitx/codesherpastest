@@ -20,10 +20,13 @@ db: Session = SessionLocal()
 account = crud.create_account(db=db, account=account_create)
 print(f"Account created: {account.iban} -- Balance: {account.balance}")'''
 
-# Remove all the rows on table `accounts`
+# Remove all the rows on table `accounts`, change it to Transaction to remove all the `transactions`
 
-'''db.query(models.Transaction).delete()
+'''db.query(models.Account).delete()
 db.commit()'''
+
+# Hardcode random transfers to check if the date and type filtering works (it adds + to the withdraw transactions)
+
 '''i = 0
 while i < 10:
     # Define the transaction data
@@ -39,12 +42,15 @@ while i < 10:
     transaction = crud.create_transaction(db, transaction_data)
     i = i +1'''
 
+# SHOW ALL TRANSACTIONS FILTERING
 transactions = crud.get_transactions(db, account_id=1, transactionType=None, start_date="2023-06-12", end_date="2023-12-12")
 print("All transactions:", len(transactions))
 
 for transaction in transactions:
     print(f"ID: {transaction.account_id} DATE: {transaction.date}, amount: {transaction.amount}, balance: {transaction.balance}, type: {transaction.type}")
 print("###################################################################")
+
+# GETS THE ACCOUNT BY IBAN
 
 '''account = crud.get_account(db, "ES7921000813610123455955")
 print(f"MY ACCOUNT -- ID: {account.id} IBAN: {account.iban}, Balance: {account.balance}")'''

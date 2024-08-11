@@ -1,3 +1,5 @@
-- Fill the config.json with the host, port and IBAN parameters
-- Install requirements.txt to be able to run the app
-- Run menu.py to run the app
+- Fill the config.json with the host, port and IBAN parameters.
+- Install requirements.txt to be able to run the app.
+- Run menu.py to run the app.
+- Run the main_testDB to test the DB and remove or add new rows to test the program.
+- If you want to change the date of transactions without running the main_testDB file you will have to change it on crud.py in the `create_transaction` function.
