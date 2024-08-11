@@ -99,6 +99,11 @@ def printTransactions(data, ascending):
     for entry in data:
         formatted_date = entry['date'].strftime("%d.%m.%Y")
 
+        if entry['type'] == 0:
+            entry['type'] = "Deposit"
+        else:
+            entry['type'] = "Withdrawal"
+
         # Format amount with a sign
         amount = f"{entry['amount']:+.0f}"
         print(f"{formatted_date:<12} {amount:<7} {entry['balance']:<7.0f} {entry['type']}")
@@ -302,7 +307,6 @@ def show_menu(host, port, iban):
                     sort_order = input(
                         "Do you want to show transactions in ascending or descending order? (a/d) (Enter for default): ").lower()
                     response = ShowTransactions(account, host, port)
-                    print("OPTION 4 RESPONSE; ", response.json())
                     if sort_order == 'a':
                         printTransactions(response.json(), ascending=True)
                     elif sort_order == 'd':
