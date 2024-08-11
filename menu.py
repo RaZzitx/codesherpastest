@@ -32,6 +32,7 @@ def readConfig():
 
     return hostConfig, portConfig, ibanConfig
 
+
 def iban_check(iban):
     # Remove spaces and to upper case
     iban = iban.replace(' ', '').upper()
@@ -46,8 +47,8 @@ def iban_check(iban):
     else:
         return True
 
-def createAccount(iban, host, port):
 
+def createAccount(iban, host, port):
     account_data = {
         "iban": iban,  # Reemplaza con el ID de la cuenta correspondiente
         "balance": 0,
@@ -56,10 +57,14 @@ def createAccount(iban, host, port):
         "Content-Type": "application/json"
     }
     requests.post(f"http://{host}:{port}/createAccount", headers=headers, json=account_data)
+
+
 def getAccountFromIban(iban, host, port):
     createAccount(iban, host, port)
     account = crud.get_account(db, iban)
     return account
+
+
 def printresponse(response, iban):
     response['date'] = datetime.strptime(response['date'], "%Y-%m-%d %H:%M:%S.%f")
     formatted_date = response['date'].strftime("%d.%m.%Y")
@@ -67,6 +72,7 @@ def printresponse(response, iban):
     print("---------- OPERATION SUCCESSFUL ----------")
     print(f"BANK ACCOUNT: {iban}")
     print(f"Date: {formatted_date} Amount: {response['amount']}, Balance: {response['balance']}")
+
 
 def printTransferResponse(response, originIBAN, destinationIBAN):
     response['date'] = datetime.strptime(response['date'], "%Y-%m-%d %H:%M:%S.%f")
@@ -76,13 +82,14 @@ def printTransferResponse(response, originIBAN, destinationIBAN):
     print(f"FROM {originIBAN} ----   TO   ---- {destinationIBAN}")
     print(f"Date: {formatted_date} Amount: {response['amount']}, Balance: {response['balance']}")
 
-def printTransactions(data):
+
+def printTransactions(data, ascending):
     print("------- LIST OF TRANSACTIONS ---------")
     # Print header
-    print(f"{'Date':<12} {'Amount':<7} {'Balance':<7}")
+    print(f"{'Date':<12} {'Amount':<7} {'Balance':<7} {'Type':<7}")
 
-    # Sort data by date in descending order (most recent first)
-    data.sort(key=lambda x: x['date'], reverse=True)
+    # Sort data by date in ascending or descending order based on the 'ascending' flag
+    data.sort(key=lambda x: x['date'], reverse=not ascending)
 
     # Convert date strings to datetime objects after sorting
     for entry in data:
@@ -94,25 +101,31 @@ def printTransactions(data):
 
         # Format amount with a sign
         amount = f"{entry['amount']:+.0f}"
-        print(f"{formatted_date:<12} {amount:<7} {entry['balance']:<7.0f}")
-def Deposit(account,amount, host, port):
+        print(f"{formatted_date:<12} {amount:<7} {entry['balance']:<7.0f} {entry['type']}")
+
+
+def Deposit(account, amount, host, port):
     transaction_data = {
-        "account_id": account.id,  # Reemplaza con el ID de la cuenta correspondiente
+        "account_id": account.id,
         "amount": float(amount),
         "balance": 0,
-        "date": ""
+        "date": "",
+        "type": int(0)  # DEPOSIT
     }
     headers = {
         "Content-Type": "application/json"
     }
     response = requests.post(f"http://{host}:{port}/transactions", headers=headers, json=transaction_data)
     return response
-def Withdraw(account,amount, host, port):
+
+
+def Withdraw(account, amount, host, port):
     transaction_data = {
-        "account_id": account.id,  # Reemplaza con el ID de la cuenta correspondiente
+        "account_id": account.id,
         "amount": -float(amount),
         "balance": 0,
-        "date": ""
+        "date": "",
+        "type": 1  # WITHDRAW
     }
     headers = {
         "Content-Type": "application/json"
@@ -120,6 +133,36 @@ def Withdraw(account,amount, host, port):
     response = requests.post(f"http://{host}:{port}/transactions", headers=headers, json=transaction_data)
 
     return response
+def is_valid_date(date_str):
+    """Check if date its in format YYYY-MM-DD."""
+    try:
+        if date_str:
+            datetime.strptime(date_str, '%Y-%m-%d')
+        return True
+    except ValueError:
+        return False
+def get_user_input():
+    # Ask the user if he wants to deposit or withdraw
+    transaction_type = input("Do you want to see Deposits or Withdraws? (type 'd' or 'w'): ").strip().lower()
+    if transaction_type != 'd' and transaction_type != 'w':
+        print("Wrong type of transaction! Will show all transactions.")
+        transaction_type = None
+    elif transaction_type == 'd':
+        transaction_type = 0
+    elif transaction_type == 'w':
+        transaction_type = 1
+    # Ask for start date
+    start_date = input("Introduce the start date (YYYY-MM-DD) or press enter in case you don't want: ").strip()
+    if start_date == "" or not is_valid_date(start_date):
+        start_date = None
+
+    # Ask for end  date
+    end_date = input("Introduce the end date (YYYY-MM-DD) or press enter in case you don't want: ").strip()
+    if end_date == "" or not is_valid_date(end_date):
+        end_date = None
+    print("TRANSACTION TYPE: ", transaction_type)
+    return transaction_type, start_date, end_date
+
 
 def ShowTransactions(account, host, port):
     headers = {
@@ -128,12 +171,40 @@ def ShowTransactions(account, host, port):
     response = requests.get(f"http://{host}:{port}/transactions/{account.id}", headers=headers)
     return response
 
+
+def build_query_string(transaction_type, start_date, end_date):
+
+    query_params = []
+
+    if transaction_type is not None:
+        query_params.append(f"transactionType={transaction_type}")
+    if start_date is not None:
+        query_params.append(f"start_date={start_date}")
+    if end_date is not None:
+        query_params.append(f"end_date={end_date}")
+
+    return '&'.join(query_params)
+
+def ShowSearchTransactions(account, host, port, ttype, start_date, end_date):
+    headers = {
+        "Content-Type": "application/json"
+    }
+    url = f"http://{host}:{port}/transactions/{account.id}"
+    query_string = build_query_string(ttype, start_date, end_date)
+    if query_string:
+        url += f"?{query_string}"
+
+    print("URL: ", url)
+    response = requests.get(url, headers=headers)
+    return response
+
 # Function to run the Uvicorn server
 def run_server(host, port):
     global server
     config = uvicorn.Config(app, host=host, port=port, log_level="error")
     server = uvicorn.Server(config)
     server.run()
+
 
 # Function to stop the Uvicorn server
 def stop_server():
@@ -147,7 +218,7 @@ def stop_server():
 def show_menu(host, port, iban):
     try:
         while True:
-            #iban = input("What is your IBAN? ")
+            # iban = input("What is your IBAN? ")
             checkIban = iban_check(iban)
 
             if checkIban:
@@ -159,12 +230,13 @@ def show_menu(host, port, iban):
                 print("2. Withdraw money")
                 print("3. Transfer money")
                 print("4. Show transactions list")
-                print("5. Exit")
+                print("5. Search movements")
+                print("6. Exit")
 
                 # Gets the account item for the input iban
                 account = getAccountFromIban(iban, host, port)
 
-                choice = input("Select an option (1/2/3/4/5): ")
+                choice = input("Select an option (1/2/3/4/5/6): ")
 
                 if choice == "1":
                     # Create a transaction
@@ -227,10 +299,37 @@ def show_menu(host, port, iban):
                         print(f"Invalid input: Please enter a valid number.")
 
                 elif choice == "4":
+                    sort_order = input(
+                        "Do you want to show transactions in ascending or descending order? (a/d) (Enter for default): ").lower()
                     response = ShowTransactions(account, host, port)
-                    printTransactions(response.json())
+                    print("OPTION 4 RESPONSE; ", response.json())
+                    if sort_order == 'a':
+                        printTransactions(response.json(), ascending=True)
+                    elif sort_order == 'd':
+                        printTransactions(response.json(), ascending=False)
+                    else:
+                        print("Invalid choice. Showing transactions in descending order by default.")
+                        printTransactions(response.json(), ascending=False)
 
                 elif choice == "5":
+                    searchSortOrder = input(
+                        "Do you want to show transactions in ascending or descending order? (a/d) (Enter for default): ").lower()
+
+                    transactionType, start_date, end_date = get_user_input()
+                    response = ShowSearchTransactions(account, host, port, transactionType, start_date, end_date)
+                    if response.status_code != 404:
+
+                        if searchSortOrder == 'a':
+                            printTransactions(response.json(), ascending=True)
+                        elif searchSortOrder == 'd':
+                            printTransactions(response.json(), ascending=False)
+                        else:
+                            print("Invalid choice. Showing transactions in descending order by default.")
+                            printTransactions(response.json(), ascending=False)
+                    else:
+                        print("Transactions not found!")
+
+                elif choice == "6":
                     print("Exiting the program...")
                     break
                 else:
@@ -241,11 +340,12 @@ def show_menu(host, port, iban):
     except KeyboardInterrupt:
         print("\nKeyboard interrupt detected. Exiting...")
 
+
 if __name__ == "__main__":
     host, port, iban = readConfig()
 
     # Run the FastAPI server in a separate thread
-    server_thread = threading.Thread(target=run_server,args=(host, port), daemon=True)
+    server_thread = threading.Thread(target=run_server, args=(host, port), daemon=True)
     server_thread.start()
 
     # Give the server a moment to start up

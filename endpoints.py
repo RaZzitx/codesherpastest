@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session
 import crud
 import schemas
 from database import SessionLocal
-from typing import List
+from typing import List, Optional
 
 router = APIRouter()
 
@@ -42,7 +42,17 @@ def create_transaction(transaction: schemas.TransactionCreate, db: Session = Dep
     return db_transaction
 
 # SHOWS THE LIST OF TRANSACTIONS BY ID
-@router.get("/transactions/{account_id}", response_model=List[schemas.Transaction])
+'''@router.get("/transactions/{account_id}", response_model=List[schemas.Transaction])
 def read_transactions(account_id: int, db: Session = Depends(get_db)):
     transactions = crud.get_transactions(db, account_id=account_id)
+    return transactions'''
+@router.get("/transactions/{account_id}", response_model=List[schemas.Transaction])
+def read_transactions(account_id: int,
+                      transactionType: Optional[int] = None,
+                      start_date: Optional[str] = None,
+                      end_date: Optional[str] = None,
+                      db: Session = Depends(get_db)):
+    transactions = crud.get_transactions(db, account_id=account_id, transactionType=transactionType, start_date=start_date, end_date=end_date)
+    if not transactions:
+        raise HTTPException(status_code=404, detail="Transactions not found")
     return transactions

@@ -1,8 +1,11 @@
 # main_testDB.py
+import random
+from datetime import datetime
 
 from sqlalchemy.orm import Session
 import crud
 import models
+import schemas
 from database import SessionLocal, engine
 
 # Create database tables
@@ -10,9 +13,6 @@ models.Base.metadata.create_all(bind=engine)
 
 # Obtain a database session
 db: Session = SessionLocal()
-
-
-
 
 # Create a new account
 
@@ -24,24 +24,26 @@ print(f"Account created: {account.iban} -- Balance: {account.balance}")'''
 
 '''db.query(models.Transaction).delete()
 db.commit()'''
+'''i = 0
+while i < 10:
+    # Define the transaction data
+    transaction_data = schemas.TransactionCreate(
+        account_id=1,  # Replace with a valid account ID
+        amount= random.randint(1000, 10000),  # The amount to be added or subtracted from the balance
+        balance = 0.0,
+        date="",  # Optional, will use the current UTC time if not provided
+        type = random.randint(0, 1)
+    )
 
+    # Create the transaction
+    transaction = crud.create_transaction(db, transaction_data)
+    i = i +1'''
 
-# Define the transaction data
-'''transaction_data = schemas.TransactionCreate(
-    account_id=1,  # Replace with a valid account ID
-    amount= 100.0,  # The amount to be added or subtracted from the balance
-    balance = 0.0,
-    date=datetime.utcnow()  # Optional, will use the current UTC time if not provided
-)
-
-# Create the transaction
-transaction = crud.create_transaction(db, transaction_data)'''
-
-transactions = crud.get_transactions(db, account_id=1)
+transactions = crud.get_transactions(db, account_id=1, transactionType=None, start_date="2023-06-12", end_date="2023-12-12")
 print("All transactions:", len(transactions))
 
 for transaction in transactions:
-    print(f"ID: {transaction.account_id} DATE: {transaction.date}, amount: {transaction.amount}, balance: {transaction.balance}")
+    print(f"ID: {transaction.account_id} DATE: {transaction.date}, amount: {transaction.amount}, balance: {transaction.balance}, type: {transaction.type}")
 print("###################################################################")
 
 '''account = crud.get_account(db, "ES7921000813610123455955")

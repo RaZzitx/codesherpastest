@@ -5,7 +5,7 @@ class TransactionBase(BaseModel):
     date: str
     amount: float
     balance: float
-
+    type: int
 class TransactionCreate(TransactionBase):
     account_id: int
 

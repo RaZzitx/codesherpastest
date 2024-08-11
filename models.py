@@ -18,4 +18,5 @@ class Transaction(Base):
     date = Column(String)
     amount = Column(Float)
     balance = Column(Float)
+    type = Column(Integer)
     account = relationship("Account", back_populates="transactions")
