@@ -42,7 +42,7 @@ while i < 10:
     transaction = crud.create_transaction(db, transaction_data)
     i = i +1'''
 
-# SHOW ALL TRANSACTIONS FILTERING
+# SHOW ALL TRANSACTIONS FILTERING (transactionType = 0 (Deposit), = 1 (Withdrawal), = None (Show all)
 transactions = crud.get_transactions(db, account_id=1, transactionType=None, start_date="2023-06-12", end_date="2023-12-12")
 print("All transactions:", len(transactions))
 
