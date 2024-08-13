@@ -60,7 +60,7 @@ def create_transaction(db: Session, transaction: schemas.TransactionCreate):
         models.Transaction.account_id == account_id).offset(skip).all()'''
 
 
-# TODO Arreglar que no detecta el = del end date solo lo mas pequeño
+# TODO FIX THAT END DATE JUST GETS THE end_date THAT ARE GREATER NOT THE EQUAL ONES
 def get_transactions(db: Session, account_id: int, transactionType: int = None, start_date: str = None, end_date: str = None):
 
 
